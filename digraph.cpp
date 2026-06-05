@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <string>
 #include <queue>
+#include <vector>
 namespace graph
 {
     class digraph{
@@ -24,9 +25,8 @@ namespace graph
 
             if (it == graph.end()){
                 return nullptr;
-
-                return &it->second;
             }
+            return &it->second;
         }
 
 
