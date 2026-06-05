@@ -7,6 +7,7 @@
 #include <string>
 #include <queue>
 #include <vector>
+
 namespace graph
 {
     class digraph{
@@ -18,7 +19,8 @@ namespace graph
         };
 
         std::unordered_map<std::string, node> graph;
-        int total_edges = 0;
+        std::unordered_map<std::string, int> input_degree;
+        int total_edges = 0; // total arestas
 
         node *find(const std::string& ip){
             auto it = graph.find(ip);
@@ -29,10 +31,56 @@ namespace graph
             return &it->second;
         }
 
+        void visit_node(node* current, std::unordered_set<std::string>& visited, int level)
+        {
+            std::cout << std::string(level, '\t') << current->ip << "\n";
+            visited.insert(current->ip);
 
+            for (node* p : current->links) {
+                if (visited.count(p->ip) == 0) {
+                    visit_node(p, visited, level + 1);
+                }
+            }
+        }
 
     public:
-        void insert_node(const std::string &ip){ // implementar
+        void insert_node(const std::string& ip){
+            if (ip.empty() || ip == "*") {
+                return;
+            }
+
+            if (graph.count(ip) != 0) {
+                return;
+            }
+
+            node aux;
+            aux.ip = ip;
+
+            graph[ip] = aux;
+            input_degree[ip] = 0;
+        }
+
+        void insert_link(const std::string& from, const std::string& to){
+            if (from.empty() || to.empty())
+                return;
+
+            if (from == "*" || to == "*")
+                return;
+
+            insert_node(from);
+            insert_node(to);
+
+            auto pfrom = find(from);
+            auto pto = find(to);
+
+            if (pfrom->links_inserted.count(to) != 0)
+                return;
+
+            pfrom->links.push_back(pto);
+            pfrom->links_inserted.insert(to);
+
+            input_degree[to]++;
+            total_edges++;
     }
 };
 }
