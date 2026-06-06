@@ -5,16 +5,40 @@
 #include <string>
 using namespace std;
 
-int main(){
-    // cout << "Grafo de roteamento inicializado!\n";
-    // cout << "==============================================\n";
-    // cout << "1. Exibir Grafo Completo\n"  
-    //     << "2. Encontrar Menor Caminho\n"
-    //     << "3. Calcular o Diâmetro do Grafo\n"
-    //     << "4. Identificar Roteadores Críticos\n"
-    //     << "0. Sair\n";
-    // cout << "==============================================\n";
 
+char menu(){
+    char resposta;
+    while (true){
+        cout << "\nGrafo de roteamento inicializado!\n";
+        cout << "==============================================\n";
+        cout << "1. Exibir Grafo Completo\n"
+        << "2. Encontrar Menor Caminho\n"
+        << "3. Calcular o Diâmetro do Grafo\n"
+        << "4. Identificar Roteadores Críticos\n"
+        << "0. Sair\n";
+        cout << "==============================================\n";
+        cin >> resposta;
+        cin.ignore();
+        if(resposta == '0' || resposta == '1' || resposta == '2' || resposta == '3' || resposta == '4'){
+
+            return resposta;
+        }
+        else{
+            cout << "Opção Inválida! Digite um valor válido!";
+        };
+    }
+
+}
+
+bool validateInput(){
+
+}
+
+
+
+int main(){
+    
+    menu();
     graph::digraph g;
 
     g.insert_link("A", "B");

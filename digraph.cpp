@@ -82,5 +82,35 @@ namespace graph
             input_degree[to]++;
             total_edges++;
     }
+        void show(){// tentar compilar, se der erro substituir pela versão abaixo!
+            std::ofstream dot("grafo.dot");
+            dot << "digraph {\n";
+            for (const auto& [key, n] : graph) {
+                for (const node* link : n.links) {
+                    dot << "\t\"" << key << "\" -> \"" << link->ip << "\";\n";
+                }
+            }
+            dot << "}\n";
+            dot.close();
+
+            system("dot -Tpng grafo.dot -o grafo.png");
+    }
+    /*
+    void show(){
+    std::ofstream dot("grafo.dot");
+    dot << "digraph {\n";
+    for (const auto& par : graph) {
+        const std::string& key = par.first;   // a chave (IP de origem)
+        const node& n = par.second;            // o valor (o nó)
+        for (const node* link : n.links) {
+            dot << "\t\"" << key << "\" -> \"" << link->ip << "\";\n";
+        }
+    }
+    dot << "}\n";
+    dot.close();
+
+    system("dot -Tpng grafo.dot -o grafo.png");
+}    
+    */
 };
 }
