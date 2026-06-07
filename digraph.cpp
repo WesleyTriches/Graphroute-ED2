@@ -82,6 +82,15 @@ namespace graph
             input_degree[to]++;
             total_edges++;
     }
+
+        int node_count() {
+            return graph.size();
+        }
+
+        int edge_count() {
+            return total_edges;
+        }
+        
         void show(){// tentar compilar, se der erro substituir pela versão abaixo!
             std::ofstream dot("grafo.dot");
             dot << "digraph {\n";

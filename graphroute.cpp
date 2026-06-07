@@ -48,6 +48,13 @@ int main(){
     g.insert_link("*", "E"); 
     g.insert_link("F", "*"); 
 
+    // teste contagem de aresta e vértice
+    std::cout << "Vertices: " << g.node_count() << "\n";
+    std::cout << "Arestas: " << g.edge_count() << "\n";
+
+    // g.show();
+
+
     return 0;
 
 }   
