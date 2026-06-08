@@ -2,61 +2,115 @@
 #include <cctype>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <vector>
 using namespace std;
 
+vector<string> split(const string& line, char sep)
+{
+    vector<string> fields;
+    stringstream ss(line);
+    string campo;
+    while (getline(ss, campo, sep))
+        fields.push_back(campo);
+    return fields;
+}
 
-char menu(){
+char menu()
+{
     char resposta;
-    while (true){
-        cout << "\nGrafo de roteamento inicializado!\n";
-        cout << "==============================================\n";
+    while (true) {
+        cout << "\n==============================================\n";
         cout << "1. Exibir Grafo Completo\n"
-        << "2. Encontrar Menor Caminho\n"
-        << "3. Calcular o Diâmetro do Grafo\n"
-        << "4. Identificar Roteadores Críticos\n"
-        << "0. Sair\n";
+             << "2. Encontrar Menor Caminho\n"
+             << "3. Calcular o Diâmetro do Grafo\n"
+             << "4. Identificar Roteadores Críticos\n"
+             << "0. Sair\n";
         cout << "==============================================\n";
         cin >> resposta;
         cin.ignore();
-        if(resposta == '0' || resposta == '1' || resposta == '2' || resposta == '3' || resposta == '4'){
-
+        if (resposta == '0' || resposta == '1' || resposta == '2' || resposta == '3' || resposta == '4')
             return resposta;
-        }
-        else{
-            cout << "Opção Inválida! Digite um valor válido!";
-        };
+        else
+            cout << "Opção inválida! Digite um valor válido!\n";
+    }
+}
+
+char submenu()
+{
+    char resposta;
+    while (true) {
+        cout << "Selecione o formato de saída do Graphviz:\n";
+        cout << "1. Tela\n"
+             << "2. Imagem (PNG)\n"
+             << "3. Documento (PDF)\n";
+        cout << "Opção: ";
+        cin >> resposta;
+        cin.ignore();
+        if (resposta == '1' || resposta == '2' || resposta == '3')
+            return resposta;
+        else
+            cout << "Opção inválida!\n";
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    if (argc < 2) {
+        cerr << "Uso: " << argv[0] << " <arquivo.log>\n";
+        return 1;
     }
 
-}
-
-bool validateInput(){
-
-}
-
-
-
-int main(){
-    
-    menu();
     graph::digraph g;
 
-    g.insert_link("A", "B");
-    g.insert_link("A", "C");
-    g.insert_link("B", "D");
-    g.insert_link("A", "B"); 
-    g.insert_link("*", "E"); 
-    g.insert_link("F", "*"); 
+    ifstream in(argv[1]);
+    if (!in) {
+        cerr << "Erro: não foi possivel abrir o arquivo '" << argv[1] << "'\n";
+        return 1;
+    }
 
-    // teste contagem de aresta e vértice
-    std::cout << "Vertices: " << g.node_count() << "\n";
-    std::cout << "Arestas: " << g.edge_count() << "\n";
+    string line;
+    getline(in, line);
+    while (getline(in, line)) {
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back(); 
+        vector<string> fields = split(line, ',');
+        if (fields.size() < 6)
+            continue;
+        g.insert_link(fields[4], fields[5]); 
+    }
 
-    // g.show();
+    cout << "\nGrafo de roteamento inicializado!\n";
+    cout << "Vertices unicos (IPs): " << g.node_count()
+         << " | Arestas: " << g.edge_count() << "\n";
 
+    char opcao;
+    do {
+        opcao = menu();
 
+        if (opcao == '1') {
+            char formato = submenu();
+            //TODO: generate_output(formato);
+        }
+        else if (opcao == '2') {
+            string origem, destino;
+            cout << "Digite o IP de Origem: ";
+            getline(cin, origem);
+            cout << "Digite o IP de Destino: ";
+            getline(cin, destino);
+            char formato = submenu();
+            // TODO: generate_output(formato);
+        }
+        else if (opcao == '3') {
+            // TODO: calculation_diameters();
+        }
+        else if (opcao == '4') {
+            // TODO: critical_routers();
+        }
+
+    } while (opcao != '0');
+
+    cout << "Encerrando...\n";
     return 0;
-
-}   
-
-
+}

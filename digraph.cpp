@@ -2,11 +2,12 @@
 #include <unordered_set>
 #include <iostream>
 #include <fstream>
-#include <ostream>
+#include <iostream>
 #include <cstdlib>
 #include <string>
 #include <queue>
 #include <vector>
+#include <algorithm>
 
 namespace graph
 {
@@ -72,6 +73,9 @@ namespace graph
 
             auto pfrom = find(from);
             auto pto = find(to);
+            
+            if (!pfrom || !pto)
+                return;
 
             if (pfrom->links_inserted.count(to) != 0)
                 return;
@@ -91,7 +95,7 @@ namespace graph
             return total_edges;
         }
         
-        void show(){// tentar compilar, se der erro substituir pela versão abaixo!
+        void show(){
             std::ofstream dot("grafo.dot");
             dot << "digraph {\n";
             for (const auto& [key, n] : graph) {
@@ -104,22 +108,6 @@ namespace graph
 
             system("dot -Tpng grafo.dot -o grafo.png");
     }
-    /*
-    void show(){
-    std::ofstream dot("grafo.dot");
-    dot << "digraph {\n";
-    for (const auto& par : graph) {
-        const std::string& key = par.first;   // a chave (IP de origem)
-        const node& n = par.second;            // o valor (o nó)
-        for (const node* link : n.links) {
-            dot << "\t\"" << key << "\" -> \"" << link->ip << "\";\n";
-        }
-    }
-    dot << "}\n";
-    dot.close();
-
-    system("dot -Tpng grafo.dot -o grafo.png");
-}    
-    */
+   
 };
 }
