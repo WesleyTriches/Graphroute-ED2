@@ -109,9 +109,9 @@ int main(int argc, char* argv[]) {
         opcao = menu();
 
         if (opcao == '1') {
-            string base = g.show(argv[1]);
-            char format = submenu();
-            run_graphviz(base, format);
+            char formato = submenu();
+            g.show(argv[1], formato);
+            
         }
         else if (opcao == '2') {
             string origem, destino;

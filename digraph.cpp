@@ -43,6 +43,7 @@ namespace graph
                 }
             }
         }
+        
 
     public:
         void insert_node(const std::string& ip){
@@ -60,6 +61,7 @@ namespace graph
             graph[ip] = aux;
             input_degree[ip] = 0;
         }
+
 
         void insert_link(const std::string& from, const std::string& to){
             if (from.empty() || to.empty())
@@ -87,6 +89,7 @@ namespace graph
             total_edges++;
         }
 
+
         int node_count() {
             return graph.size();
         }
@@ -94,11 +97,13 @@ namespace graph
         int edge_count() {
             return total_edges;
         }
-        
-        std::string show(const std::string& input_filepath){
-            std::string base = input_filepath;
 
-            std::ofstream dot(base + ".dot");
+        
+        void show(const std::string& input_filepath, char format){
+            std::string base = input_filepath;
+            std::string dot_file = base + ".dot";
+
+            std::ofstream dot(dot_file);
 
             dot << "digraph {\n";
 
@@ -111,8 +116,21 @@ namespace graph
             dot << "}\n";
             dot.close();
 
-            return base;
+            std::string command;
+
+            if (format == '1') {
+                command = "dot -Tx11 " + dot_file + " &";
+            }
+            else if (format == '2') {
+                command = "dot -Tpng " + dot_file + " -o " + base + ".png";
+            }
+            else if (format == '3') {
+                command = "dot -Tpdf " + dot_file + " -o " + base + ".pdf";
+            }
+
+            system(command.c_str()); // converte uma std::string do C++ para texto no formato C
         }
+
         
         std::vector<std::pair<std::string, int>> critical_routers() {
             std::vector<std::pair<std::string, int>> ranking;
