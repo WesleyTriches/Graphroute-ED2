@@ -106,7 +106,18 @@ int main(int argc, char* argv[])
             // TODO: calculation_diameters();
         }
         else if (opcao == '4') {
-            // TODO: critical_routers();
+            vector<pair<string, int>> ranking = g.critical_routers();
+
+            cout << "\nTop 5 roteadores criticos:\n";
+
+            int limit = 5;
+            if ((int)ranking.size() < 5)
+                limit = ranking.size();
+
+            for (int i = 0; i < limit; i++) {
+                cout << i + 1 << ". " << ranking[i].first
+                     << " - Grau de entrada: " << ranking[i].second << "\n";
+            }
         }
 
     } while (opcao != '0');

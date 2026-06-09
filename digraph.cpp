@@ -108,6 +108,22 @@ namespace graph
 
             system("dot -Tpng grafo.dot -o grafo.png");
     }
+    std::vector<std::pair<std::string, int>> critical_routers()
+        {
+            std::vector<std::pair<std::string, int>> ranking;
+
+            for (const auto& item : input_degree)
+                ranking.push_back(item);
+
+            std::sort(ranking.begin(), ranking.end(),
+                [](const auto& a, const auto& b) {
+                    if (a.second != b.second)
+                        return a.second > b.second;   // grau decrescente
+                    return a.first < b.first;          // desempate por IP
+                });
+
+            return ranking;
+        }
    
 };
 }
