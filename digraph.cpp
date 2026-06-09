@@ -85,7 +85,7 @@ namespace graph
 
             input_degree[to]++;
             total_edges++;
-    }
+        }
 
         int node_count() {
             return graph.size();
@@ -95,21 +95,26 @@ namespace graph
             return total_edges;
         }
         
-        void show(){
-            std::ofstream dot("grafo.dot");
+        std::string show(const std::string& input_filepath){
+            std::string base = input_filepath;
+
+            std::ofstream dot(base + ".dot");
+
             dot << "digraph {\n";
+
             for (const auto& [key, n] : graph) {
                 for (const node* link : n.links) {
                     dot << "\t\"" << key << "\" -> \"" << link->ip << "\";\n";
                 }
             }
+
             dot << "}\n";
             dot.close();
 
-            system("dot -Tpng grafo.dot -o grafo.png");
-    }
-    std::vector<std::pair<std::string, int>> critical_routers()
-        {
+            return base;
+        }
+        
+        std::vector<std::pair<std::string, int>> critical_routers() {
             std::vector<std::pair<std::string, int>> ranking;
 
             for (const auto& item : input_degree)

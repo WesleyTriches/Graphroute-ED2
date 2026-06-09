@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstdlib>
 using namespace std;
 
 vector<string> split(const string& line, char sep)
@@ -55,8 +56,26 @@ char submenu()
     }
 }
 
-int main(int argc, char* argv[])
+void run_graphviz(const string& base, char format)
 {
+    string dot = base + ".dot";
+    string command;
+
+    if (format == '1') {
+        command = "dot -Tx11 " + dot + " &";
+    }
+    else if (format == '2') {
+        command = "dot -Tpng " + dot + " -o " + base + ".png";
+    }
+    else if (format == '3') {
+        command = "dot -Tpdf " + dot + " -o " + base + ".pdf";
+    }
+
+    system(command.c_str()); // converte uma std::string do C++ para texto no formato C
+}
+
+
+int main(int argc, char* argv[]) {
     if (argc < 2) {
         cerr << "Uso: " << argv[0] << " <arquivo.log>\n";
         return 1;
@@ -90,8 +109,9 @@ int main(int argc, char* argv[])
         opcao = menu();
 
         if (opcao == '1') {
-            char formato = submenu();
-            //TODO: generate_output(formato);
+            string base = g.show(argv[1]);
+            char format = submenu();
+            run_graphviz(base, format);
         }
         else if (opcao == '2') {
             string origem, destino;
