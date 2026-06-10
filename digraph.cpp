@@ -2,13 +2,11 @@
 #include <unordered_set>
 #include <iostream>
 #include <fstream>
-#include <iostream>
 #include <cstdlib>
 #include <string>
 #include <queue>
 #include <vector>
 #include <algorithm>
-
 namespace graph
 {
     class digraph{
@@ -32,19 +30,6 @@ namespace graph
             return &it->second;
         }
 
-        void visit_node(node* current, std::unordered_set<std::string>& visited, int level)
-        {
-            std::cout << std::string(level, '\t') << current->ip << "\n";
-            visited.insert(current->ip);
-
-            for (node* p : current->links) {
-                if (visited.count(p->ip) == 0) {
-                    visit_node(p, visited, level + 1);
-                }
-            }
-        }
-        
-
     public:
         void insert_node(const std::string& ip){
             if (ip.empty() || ip == "*") {
@@ -62,7 +47,6 @@ namespace graph
             input_degree[ip] = 0;
         }
 
-
         void insert_link(const std::string& from, const std::string& to){
             if (from.empty() || to.empty())
                 return;
@@ -75,7 +59,7 @@ namespace graph
 
             auto pfrom = find(from);
             auto pto = find(to);
-            
+
             if (!pfrom || !pto)
                 return;
 
@@ -89,7 +73,6 @@ namespace graph
             total_edges++;
         }
 
-
         int node_count() {
             return graph.size();
         }
@@ -98,7 +81,10 @@ namespace graph
             return total_edges;
         }
 
-        
+        bool contains(const std::string& ip) {
+            return find(ip) != nullptr;
+        }
+
         void show(const std::string& input_filepath, char format){
             std::string base = input_filepath;
             std::string dot_file = base + ".dot";
@@ -129,9 +115,127 @@ namespace graph
             }
 
             system(command.c_str()); // converte uma std::string do C++ para texto no formato C
+
+            if (format == '2') {
+                std::cout << "Arquivo " << base << ".png gerado com sucesso.\n";
+            }
+            else if (format == '3') {
+                std::cout << "Arquivo " << base << ".pdf gerado com sucesso.\n";
+            }
         }
 
-        
+        void show_path(const std::string& input_filepath, const std::vector<node*>& path, char format){
+            std::unordered_set<std::string> path_edges;
+            std::unordered_set<std::string> path_nodes;
+
+            for (int i = 0; i + 1 < (int)path.size(); i++) {
+                path_edges.insert(path[i]->ip + "->" + path[i + 1]->ip);
+            }
+
+            for (node* p : path) {
+                path_nodes.insert(p->ip);
+            }
+
+            std::string base = input_filepath + "_path";
+            std::string dot_file = base + ".dot";
+
+            std::ofstream dot(dot_file);
+
+            dot << "digraph {\n";
+
+            for (const auto& ip : path_nodes) {
+                dot << "\t\"" << ip << "\" [style=filled, fillcolor=red, fontcolor=white];\n";
+            }
+
+            for (const auto& [key, n] : graph) {
+                for (const node* link : n.links) {
+                    if (path_edges.count(key + "->" + link->ip) != 0) {
+                        dot << "\t\"" << key << "\" -> \"" << link->ip
+                            << "\" [color=red, penwidth=3];\n";
+                    } else {
+                        dot << "\t\"" << key << "\" -> \"" << link->ip << "\";\n";
+                    }
+                }
+            }
+
+            dot << "}\n";
+            dot.close();
+
+            std::string command;
+
+            if (format == '1') {
+                command = "dot -Tx11 " + dot_file + " &";
+            }
+            else if (format == '2') {
+                command = "dot -Tpng " + dot_file + " -o " + base + ".png";
+            }
+            else if (format == '3') {
+                command = "dot -Tpdf " + dot_file + " -o " + base + ".pdf";
+            }
+
+            system(command.c_str());
+
+            if (format == '2') {
+                std::cout << "Arquivo " << base << ".png gerado com sucesso.\n";
+            }
+            else if (format == '3') {
+                std::cout << "Arquivo " << base << ".pdf gerado com sucesso.\n";
+            }
+        }
+
+        std::vector<node*> shortest_path(const std::string& start, const std::string& end){
+            std::vector<node*> path;
+
+            auto pstart = find(start);
+            if (!pstart)
+                return path;
+
+            auto pend = find(end);
+            if (!pend)
+                return path;
+
+            std::queue<node*> q;
+            std::unordered_set<node*> queued;
+            std::unordered_map<node*, node*> origin;
+
+            q.push(pstart);
+            queued.insert(pstart);
+            origin[pstart] = nullptr;
+
+            bool found = false;
+
+            while (!q.empty()) {
+                auto current = q.front();
+                q.pop();
+
+                if (current == pend) {
+                    found = true;
+                    break;
+                }
+
+                for (auto adj : current->links) {
+                    if (queued.count(adj) == 0) {
+                        q.push(adj);
+                        queued.insert(adj);
+                        origin[adj] = current;
+                    }
+                }
+            }
+
+            if (found) {
+                auto p = pend;
+
+                while (p) {
+                    path.push_back(p);
+                    p = origin[p];
+                }
+            }
+
+            std::reverse(path.begin(), path.end());
+
+            return path;
+        }
+
         std::vector<std::pair<std::string, int>> critical_routers() {
             std::vector<std::pair<std::string, int>> ranking;
 
@@ -147,6 +251,6 @@ namespace graph
 
             return ranking;
         }
-   
+
 };
 }

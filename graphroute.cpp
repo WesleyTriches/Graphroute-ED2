@@ -5,7 +5,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cstdlib>
 using namespace std;
 
 vector<string> split(const string& line, char sep)
@@ -56,28 +55,10 @@ char submenu()
     }
 }
 
-void run_graphviz(const string& base, char format)
-{
-    string dot = base + ".dot";
-    string command;
-
-    if (format == '1') {
-        command = "dot -Tx11 " + dot + " &";
-    }
-    else if (format == '2') {
-        command = "dot -Tpng " + dot + " -o " + base + ".png";
-    }
-    else if (format == '3') {
-        command = "dot -Tpdf " + dot + " -o " + base + ".pdf";
-    }
-
-    system(command.c_str()); // converte uma std::string do C++ para texto no formato C
-}
-
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        cerr << "Uso: " << argv[0] << " <arquivo.log>\n";
+        cout << "Uso: " << argv[0] << " <arquivo.log>\n";
         return 1;
     }
 
@@ -85,7 +66,7 @@ int main(int argc, char* argv[]) {
 
     ifstream in(argv[1]);
     if (!in) {
-        cerr << "Erro: não foi possivel abrir o arquivo '" << argv[1] << "'\n";
+        cout << "Erro: não foi possivel abrir o arquivo '" << argv[1] << "'\n";
         return 1;
     }
 
@@ -115,15 +96,41 @@ int main(int argc, char* argv[]) {
         }
         else if (opcao == '2') {
             string origem, destino;
+
             cout << "Digite o IP de Origem: ";
             getline(cin, origem);
+
             cout << "Digite o IP de Destino: ";
             getline(cin, destino);
-            char formato = submenu();
-            // TODO: generate_output(formato);
+
+            if (!g.contains(origem) || !g.contains(destino)) {
+                cout << "IP de origem ou destino nao existe no grafo.\n";
+            }
+            else {
+                auto path = g.shortest_path(origem, destino);
+
+                if (path.empty()) {
+                    cout << "Nenhum caminho encontrado entre " << origem << " e " << destino << ".\n";
+                }
+                else {
+                    cout << "\nCaminho encontrado (" << path.size() - 1 << " saltos):\n";
+
+                    for (int i = 0; i < (int)path.size(); i++) {
+                        cout << path[i]->ip;
+
+                        if (i + 1 < (int)path.size())
+                            cout << " -> ";
+                    }
+
+                    cout << "\n";
+
+                    char formato = submenu();
+                    g.show_path(argv[1], path, formato);
+                }
+            }
         }
         else if (opcao == '3') {
-            // TODO: calculation_diameters();
+            
         }
         else if (opcao == '4') {
             vector<pair<string, int>> ranking = g.critical_routers();
