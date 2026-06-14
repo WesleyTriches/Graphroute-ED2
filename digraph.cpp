@@ -251,6 +251,38 @@ namespace graph
 
             return ranking;
         }
+        int diameter()
+        {
+            int max_dist = 0;
 
+            for (auto &[key, start_node] : graph)
+            {
+                node *start = &start_node;
+
+                std::queue<node *> q;
+                std::unordered_map<node *, int> dist;
+
+                q.push(start);
+                dist[start] = 0;
+
+                while (!q.empty())
+                {
+                    node *current = q.front();
+                    q.pop();
+
+                    for (node *adj : current->links)
+                    {
+                        if (dist.count(adj) == 0)
+                        {
+                            dist[adj] = dist[current] + 1;
+                            q.push(adj);
+
+                            if (dist[adj] > max_dist)
+                                max_dist = dist[adj];
+                        }
+                    }
+                }
+            }
+        }
 };
 }

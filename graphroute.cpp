@@ -129,8 +129,9 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-        else if (opcao == '3') {
-            
+          else if (opcao == '3') {
+            int d = g.diameter();
+            cout << "\nDiametro do grafo: " << d << " saltos\n";
         }
         else if (opcao == '4') {
             vector<pair<string, int>> ranking = g.critical_routers();
