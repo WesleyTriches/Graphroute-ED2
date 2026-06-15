@@ -1,5 +1,4 @@
 #include "digraph.cpp"
-#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -12,14 +11,17 @@ vector<string> split(const string& line, char sep)
     vector<string> fields;
     stringstream ss(line);
     string campo;
+
     while (getline(ss, campo, sep))
         fields.push_back(campo);
+
     return fields;
 }
 
 char menu()
 {
     char resposta;
+
     while (true) {
         cout << "\n==============================================\n";
         cout << "1. Exibir Grafo Completo\n"
@@ -28,8 +30,10 @@ char menu()
              << "4. Identificar Roteadores Críticos\n"
              << "0. Sair\n";
         cout << "==============================================\n";
+
         cin >> resposta;
         cin.ignore();
+
         if (resposta == '0' || resposta == '1' || resposta == '2' || resposta == '3' || resposta == '4')
             return resposta;
         else
@@ -40,14 +44,17 @@ char menu()
 char submenu()
 {
     char resposta;
+
     while (true) {
         cout << "Selecione o formato de saída do Graphviz:\n";
         cout << "1. Tela\n"
              << "2. Imagem (PNG)\n"
              << "3. Documento (PDF)\n";
         cout << "Opção: ";
+
         cin >> resposta;
         cin.ignore();
+
         if (resposta == '1' || resposta == '2' || resposta == '3')
             return resposta;
         else
@@ -55,8 +62,8 @@ char submenu()
     }
 }
 
-
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     if (argc < 2) {
         cout << "Uso: " << argv[0] << " <arquivo.log>\n";
         return 1;
@@ -65,20 +72,26 @@ int main(int argc, char* argv[]) {
     graph::digraph g;
 
     ifstream in(argv[1]);
+
     if (!in) {
         cout << "Erro: não foi possivel abrir o arquivo '" << argv[1] << "'\n";
         return 1;
     }
 
     string line;
+
     getline(in, line);
+
     while (getline(in, line)) {
         if (!line.empty() && line.back() == '\r')
-            line.pop_back(); 
+            line.pop_back();
+
         vector<string> fields = split(line, ',');
+
         if (fields.size() < 6)
             continue;
-        g.insert_link(fields[4], fields[5]); 
+
+        g.insert_link(fields[4], fields[5]);
     }
 
     cout << "\nGrafo de roteamento inicializado!\n";
@@ -86,14 +99,15 @@ int main(int argc, char* argv[]) {
          << " | Arestas: " << g.edge_count() << "\n";
 
     char opcao;
+
     do {
         opcao = menu();
 
         if (opcao == '1') {
             char formato = submenu();
             g.show(argv[1], formato);
-            
         }
+
         else if (opcao == '2') {
             string origem, destino;
 
@@ -129,27 +143,31 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-          else if (opcao == '3') {
+
+        else if (opcao == '3') {
             int d = g.diameter();
             cout << "\nDiametro do grafo: " << d << " saltos\n";
         }
+
         else if (opcao == '4') {
-            vector<pair<string, int>> ranking = g.critical_routers();
+            vector<string> ranking = g.critical_routers();
 
             cout << "\nTop 5 roteadores criticos:\n";
 
             int limit = 5;
+
             if ((int)ranking.size() < 5)
                 limit = ranking.size();
 
             for (int i = 0; i < limit; i++) {
-                cout << i + 1 << ". " << ranking[i].first
-                     << " - Grau de entrada: " << ranking[i].second << "\n";
+                cout << i + 1 << ". " << ranking[i]
+                     << " - Grau de entrada: " << g.return_input_degree(ranking[i]) << "\n";
             }
         }
 
     } while (opcao != '0');
 
     cout << "Encerrando...\n";
+
     return 0;
 }

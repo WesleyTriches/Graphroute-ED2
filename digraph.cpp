@@ -7,9 +7,10 @@
 #include <queue>
 #include <vector>
 #include <algorithm>
+
 namespace graph
 {
-    class digraph{
+    class digraph {
     private:
         struct node {
             std::string ip;
@@ -19,19 +20,22 @@ namespace graph
 
         std::unordered_map<std::string, node> graph;
         std::unordered_map<std::string, int> input_degree;
-        int total_edges = 0; // total arestas
+        int total_edges = 0;
 
-        node *find(const std::string& ip){
+        node* find(const std::string& ip)
+        {
             auto it = graph.find(ip);
 
-            if (it == graph.end()){
+            if (it == graph.end()) {
                 return nullptr;
             }
+
             return &it->second;
         }
 
     public:
-        void insert_node(const std::string& ip){
+        void insert_node(const std::string& ip)
+        {
             if (ip.empty() || ip == "*") {
                 return;
             }
@@ -47,7 +51,8 @@ namespace graph
             input_degree[ip] = 0;
         }
 
-        void insert_link(const std::string& from, const std::string& to){
+        void insert_link(const std::string& from, const std::string& to)
+        {
             if (from.empty() || to.empty())
                 return;
 
@@ -73,19 +78,23 @@ namespace graph
             total_edges++;
         }
 
-        int node_count() {
+        int node_count()
+        {
             return graph.size();
         }
 
-        int edge_count() {
+        int edge_count()
+        {
             return total_edges;
         }
 
-        bool contains(const std::string& ip) {
+        bool contains(const std::string& ip)
+        {
             return find(ip) != nullptr;
         }
 
-        void show(const std::string& input_filepath, char format){
+        void show(const std::string& input_filepath, char format)
+        {
             std::string base = input_filepath;
             std::string dot_file = base + ".dot";
 
@@ -114,7 +123,7 @@ namespace graph
                 command = "dot -Tpdf " + dot_file + " -o " + base + ".pdf";
             }
 
-            system(command.c_str()); // converte uma std::string do C++ para texto no formato C
+            system(command.c_str());
 
             if (format == '2') {
                 std::cout << "Arquivo " << base << ".png gerado com sucesso.\n";
@@ -124,7 +133,8 @@ namespace graph
             }
         }
 
-        void show_path(const std::string& input_filepath, const std::vector<node*>& path, char format){
+        void show_path(const std::string& input_filepath, const std::vector<node*>& path, char format)
+        {
             std::unordered_set<std::string> path_edges;
             std::unordered_set<std::string> path_nodes;
 
@@ -152,7 +162,8 @@ namespace graph
                     if (path_edges.count(key + "->" + link->ip) != 0) {
                         dot << "\t\"" << key << "\" -> \"" << link->ip
                             << "\" [color=red, penwidth=3];\n";
-                    } else {
+                    }
+                    else {
                         dot << "\t\"" << key << "\" -> \"" << link->ip << "\";\n";
                     }
                 }
@@ -183,7 +194,8 @@ namespace graph
             }
         }
 
-        std::vector<node*> shortest_path(const std::string& start, const std::string& end){
+        std::vector<node*> shortest_path(const std::string& start, const std::string& end)
+        {
             std::vector<node*> path;
 
             auto pstart = find(start);
@@ -236,44 +248,25 @@ namespace graph
             return path;
         }
 
-        std::vector<std::pair<std::string, int>> critical_routers() {
-            std::vector<std::pair<std::string, int>> ranking;
-
-            for (const auto& item : input_degree)
-                ranking.push_back(item);
-
-            std::sort(ranking.begin(), ranking.end(),
-                [](const auto& a, const auto& b) {
-                    if (a.second != b.second)
-                        return a.second > b.second;   // grau decrescente
-                    return a.first < b.first;          // desempate por IP
-                });
-
-            return ranking;
-        }
         int diameter()
         {
             int max_dist = 0;
 
-            for (auto &[key, start_node] : graph)
-            {
-                node *start = &start_node;
+            for (auto& [key, start_node] : graph) {
+                node* start = &start_node;
 
-                std::queue<node *> q;
-                std::unordered_map<node *, int> dist;
+                std::queue<node*> q;
+                std::unordered_map<node*, int> dist;
 
                 q.push(start);
                 dist[start] = 0;
 
-                while (!q.empty())
-                {
-                    node *current = q.front();
+                while (!q.empty()) {
+                    node* current = q.front();
                     q.pop();
 
-                    for (node *adj : current->links)
-                    {
-                        if (dist.count(adj) == 0)
-                        {
+                    for (node* adj : current->links) {
+                        if (dist.count(adj) == 0) {
                             dist[adj] = dist[current] + 1;
                             q.push(adj);
 
@@ -283,6 +276,36 @@ namespace graph
                     }
                 }
             }
+
+            return max_dist;
         }
-};
+
+        std::vector<std::string> critical_routers()
+        {
+            std::vector<std::string> ranking;
+
+            for (const auto& item : input_degree) {
+                ranking.push_back(item.first);
+            }
+
+            std::sort(ranking.begin(), ranking.end(),
+                [this](const std::string& a, const std::string& b) {
+                    if (input_degree[a] != input_degree[b])
+                        return input_degree[a] > input_degree[b];
+
+                    return a < b;
+                });
+
+            return ranking;
+        }
+
+        int return_input_degree(const std::string& ip)
+        {
+            if (input_degree.count(ip) == 0)
+                return 0;
+
+            return input_degree[ip];
+        }
+    };
 }
+
