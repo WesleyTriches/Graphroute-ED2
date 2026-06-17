@@ -402,3 +402,122 @@ Sempre que uma distância maior é encontrada, o programa atualiza o `max_dist`.
 
 Ao final de todas as BFS, `max_dist` representa o diâmetro do grafo em saltos. Como o grafo é direcionado, o cálculo respeita a direção das arestas.
 
+---
+
+## ROTEADORES CRÍTICOS
+
+Os roteadores críticos são identificados pelo grau de entrada de cada nó.
+
+O grau de entrada representa quantas arestas chegam em determinado IP. Quanto maior o grau de entrada, mais vezes aquele IP aparece como destino de uma ligação.
+
+A função `critical_routers` monta uma lista com todos os IPs e ordena pelo grau de entrada, em ordem decrescente:
+
+```cpp
+std::sort(ranking.begin(), ranking.end(),
+    [this](const std::string& a, const std::string& b) {
+        if (input_degree[a] != input_degree[b])
+            return input_degree[a] > input_degree[b];
+
+        return a < b;
+    });
+```
+
+O `[this]` permite que ela acesse o atributo `input_degree` da própria classe `digraph` durante a comparação.
+
+Em caso de empate no grau de entrada, o IP é usado em ordem crescente apenas para manter a saída organizada e sempre igual entre execuções.
+
+Depois de ordenado, o programa exibe os cinco primeiros, exemplo:
+
+```text
+Top 5 roteadores criticos:
+1. 20.157.222.42 - Grau de entrada: 7
+2. 176.52.248.125 - Grau de entrada: 3
+3. 213.140.50.187 - Grau de entrada: 3
+4. 213.140.36.233 - Grau de entrada: 2
+5. 213.140.36.3 - Grau de entrada: 2
+```
+
+O grau de cada IP é obtido com `return_input_degree`, que consulta o `unordered_map input_degree`.
+
+---
+
+## GRAPHVIZ E SAÍDAS VISUAIS
+
+O Graphviz é usado para gerar a visualização do grafo.
+
+O programa cria um arquivo `.dot` com as ligações do grafo. Exemplo:
+
+```dot
+digraph {
+    "A" -> "B";
+    "B" -> "C";
+}
+```
+
+Depois, esse arquivo é enviado para o Graphviz através do `system()`, que pode gerar:
+
+* Visualização na tela (`dot -Tx11`);
+* Imagem PNG (`dot -Tpng`);
+* Documento PDF (`dot -Tpdf`).
+
+### Destaque do menor caminho
+
+Na opção de menor caminho, a função `show_path` gera um `.dot` separado (`<arquivo>_path.dot`) onde os nós e arestas do caminho encontrado são destacados:
+
+* Os nós do caminho são preenchidos em vermelho com texto branco:
+
+```dot
+"82.66.191.65" [style=filled, fillcolor=red, fontcolor=white];
+```
+
+* As arestas do caminho ficam vermelhas e mais grossas:
+
+```dot
+"82.66.191.65" -> "192.168.3.1" [color=red, penwidth=3];
+```
+
+O restante do grafo é desenhado normalmente, sem nenhum atributo extra. Assim, é possível visualizar o grafo completo com o caminho encontrado em destaque.
+
+---
+
+## EXEMPLO DE USO
+
+Compilar:
+
+```bash
+g++ -std=c++17 graphroute.cpp -o graphroute
+```
+
+Executar:
+
+```bash
+./graphroute input_1.log
+```
+
+Saída inicial:
+
+```text
+Grafo de roteamento inicializado!
+Vertices unicos (IPs): 110 | Arestas: 118
+```
+
+Exemplo de menor caminho:
+
+```text
+Digite o IP de Origem: 82.66.191.65
+Digite o IP de Destino: 194.149.162.250
+
+Caminho encontrado (3 saltos):
+82.66.191.65 -> 192.168.3.1 -> 194.149.162.248 -> 194.149.162.250
+```
+
+Exemplo de roteadores críticos:
+
+```text
+Top 5 roteadores criticos:
+1. 20.157.222.42 - Grau de entrada: 7
+2. 176.52.248.125 - Grau de entrada: 3
+3. 213.140.50.187 - Grau de entrada: 3
+4. 213.140.36.233 - Grau de entrada: 2
+5. 213.140.36.3 - Grau de entrada: 2
+```
