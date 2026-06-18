@@ -14,12 +14,11 @@ namespace graph
     private:
         struct node {
             std::string ip;
-            std::vector<node*> links;
-            std::unordered_set<std::string> links_inserted;
+            std::unordered_set<node*> links;
+            int input_degree = 0;
         };
 
         std::unordered_map<std::string, node> graph;
-        std::unordered_map<std::string, int> input_degree;
         int total_edges = 0;
 
         node* find(const std::string& ip)
@@ -46,9 +45,9 @@ namespace graph
 
             node aux;
             aux.ip = ip;
+            aux.input_degree = 0;
 
             graph[ip] = aux;
-            input_degree[ip] = 0;
         }
 
         void insert_link(const std::string& from, const std::string& to)
@@ -62,19 +61,18 @@ namespace graph
             insert_node(from);
             insert_node(to);
 
-            auto pfrom = find(from);
-            auto pto = find(to);
+            node* pfrom = find(from);
+            node* pto = find(to);
 
             if (!pfrom || !pto)
                 return;
 
-            if (pfrom->links_inserted.count(to) != 0)
+            if (pfrom->links.count(pto) != 0)
                 return;
 
-            pfrom->links.push_back(pto);
-            pfrom->links_inserted.insert(to);
+            pfrom->links.insert(pto);
 
-            input_degree[to]++;
+            pto->input_degree++;
             total_edges++;
         }
 
@@ -198,11 +196,11 @@ namespace graph
         {
             std::vector<node*> path;
 
-            auto pstart = find(start);
+            node* pstart = find(start);
             if (!pstart)
                 return path;
 
-            auto pend = find(end);
+            node* pend = find(end);
             if (!pend)
                 return path;
 
@@ -217,7 +215,7 @@ namespace graph
             bool found = false;
 
             while (!q.empty()) {
-                auto current = q.front();
+                node* current = q.front();
                 q.pop();
 
                 if (current == pend) {
@@ -225,7 +223,7 @@ namespace graph
                     break;
                 }
 
-                for (auto adj : current->links) {
+                for (node* adj : current->links) {
                     if (queued.count(adj) == 0) {
                         q.push(adj);
                         queued.insert(adj);
@@ -235,7 +233,7 @@ namespace graph
             }
 
             if (found) {
-                auto p = pend;
+                node* p = pend;
 
                 while (p) {
                     path.push_back(p);
@@ -284,14 +282,17 @@ namespace graph
         {
             std::vector<std::string> ranking;
 
-            for (const auto& item : input_degree) {
+            for (const auto& item : graph) {
                 ranking.push_back(item.first);
             }
 
             std::sort(ranking.begin(), ranking.end(),
                 [this](const std::string& a, const std::string& b) {
-                    if (input_degree[a] != input_degree[b])
-                        return input_degree[a] > input_degree[b];
+                    node* pa = find(a);
+                    node* pb = find(b);
+
+                    if (pa->input_degree != pb->input_degree)
+                        return pa->input_degree > pb->input_degree;
 
                     return a < b;
                 });
@@ -301,11 +302,12 @@ namespace graph
 
         int return_input_degree(const std::string& ip)
         {
-            if (input_degree.count(ip) == 0)
+            node* p = find(ip);
+
+            if (!p)
                 return 0;
 
-            return input_degree[ip];
+            return p->input_degree;
         }
     };
 }
-

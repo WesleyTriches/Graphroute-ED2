@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 vector<string> split(const string& line, char sep)
@@ -154,10 +155,7 @@ int main(int argc, char* argv[])
 
             cout << "\nTop 5 roteadores criticos:\n";
 
-            int limit = 5;
-
-            if ((int)ranking.size() < 5)
-                limit = ranking.size();
+            int limit = std::min(5, (int) ranking.size());
 
             for (int i = 0; i < limit; i++) {
                 cout << i + 1 << ". " << ranking[i]
