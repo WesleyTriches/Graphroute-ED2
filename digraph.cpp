@@ -35,10 +35,6 @@ namespace graph
     public:
         void insert_node(const std::string& ip)
         {
-            if (ip.empty() || ip == "*") {
-                return;
-            }
-
             if (graph.count(ip) != 0) {
                 return;
             }
@@ -52,12 +48,6 @@ namespace graph
 
         void insert_link(const std::string& from, const std::string& to)
         {
-            if (from.empty() || to.empty())
-                return;
-
-            if (from == "*" || to == "*")
-                return;
-
             insert_node(from);
             insert_node(to);
 

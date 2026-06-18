@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+
 using namespace std;
 
 vector<string> split(const string& line, char sep)
@@ -19,6 +20,11 @@ vector<string> split(const string& line, char sep)
     return fields;
 }
 
+bool valid_ip(const string& ip)
+{
+    return !ip.empty() && ip != "*";
+}
+
 char menu()
 {
     char resposta;
@@ -27,8 +33,8 @@ char menu()
         cout << "\n==============================================\n";
         cout << "1. Exibir Grafo Completo\n"
              << "2. Encontrar Menor Caminho\n"
-             << "3. Calcular o Diâmetro do Grafo\n"
-             << "4. Identificar Roteadores Críticos\n"
+             << "3. Calcular o Diametro do Grafo\n"
+             << "4. Identificar Roteadores Criticos\n"
              << "0. Sair\n";
         cout << "==============================================\n";
 
@@ -38,7 +44,7 @@ char menu()
         if (resposta == '0' || resposta == '1' || resposta == '2' || resposta == '3' || resposta == '4')
             return resposta;
         else
-            cout << "Opção inválida! Digite um valor válido!\n";
+            cout << "Opcao invalida! Digite um valor valido!\n";
     }
 }
 
@@ -47,11 +53,11 @@ char submenu()
     char resposta;
 
     while (true) {
-        cout << "Selecione o formato de saída do Graphviz:\n";
+        cout << "Selecione o formato de saida do Graphviz:\n";
         cout << "1. Tela\n"
              << "2. Imagem (PNG)\n"
              << "3. Documento (PDF)\n";
-        cout << "Opção: ";
+        cout << "Opcao: ";
 
         cin >> resposta;
         cin.ignore();
@@ -59,7 +65,7 @@ char submenu()
         if (resposta == '1' || resposta == '2' || resposta == '3')
             return resposta;
         else
-            cout << "Opção inválida!\n";
+            cout << "Opcao invalida!\n";
     }
 }
 
@@ -75,7 +81,7 @@ int main(int argc, char* argv[])
     ifstream in(argv[1]);
 
     if (!in) {
-        cout << "Erro: não foi possivel abrir o arquivo '" << argv[1] << "'\n";
+        cout << "Erro: nao foi possivel abrir o arquivo '" << argv[1] << "'\n";
         return 1;
     }
 
@@ -92,7 +98,13 @@ int main(int argc, char* argv[])
         if (fields.size() < 6)
             continue;
 
-        g.insert_link(fields[4], fields[5]);
+        string from = fields[4];
+        string to = fields[5];
+
+        if (!valid_ip(from) || !valid_ip(to))
+            continue;
+
+        g.insert_link(from, to);
     }
 
     cout << "\nGrafo de roteamento inicializado!\n";
@@ -155,7 +167,7 @@ int main(int argc, char* argv[])
 
             cout << "\nTop 5 roteadores criticos:\n";
 
-            int limit = std::min(5, (int) ranking.size());
+            int limit = std::min(5, (int)ranking.size());
 
             for (int i = 0; i < limit; i++) {
                 cout << i + 1 << ". " << ranking[i]
@@ -169,3 +181,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
