@@ -41,8 +41,7 @@ namespace graph
 
             node aux;
             aux.ip = ip;
-            aux.input_degree = 0;
-
+            
             graph[ip] = aux;
         }
 
@@ -134,7 +133,7 @@ namespace graph
                 path_nodes.insert(p->ip);
             }
 
-            std::string base = input_filepath + "_path";
+            std::string base = input_filepath;
             std::string dot_file = base + ".dot";
 
             std::ofstream dot(dot_file);
@@ -301,3 +300,5 @@ namespace graph
         }
     };
 }
+
+

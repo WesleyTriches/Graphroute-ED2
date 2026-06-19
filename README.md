@@ -3,33 +3,16 @@
 #### Desenvolvido por: Wesley Triches (210057), Alberto Luiz Marsaro Neto (188388) e Luis Gustavo Cavalheiro Rossal (161742).
 
 ## O QUE É?
-
 É um projeto desenvolvido para a matéria de Estrutura de Dados II do curso de Ciência da Computação.
+Este projeto implementa uma ferramenta para análise de rotas de rede a partir de arquivos de log no formato `.log`.
 
-O problema trabalhado é a análise de rotas de rede a partir de arquivos de log no formato `.log`.
-
-O programa lê dados de traceroute, monta um grafo direcionado usando os endereços IP encontrados no arquivo e permite realizar algumas análises sobre essa rede, como:
-
-* Exibir o grafo completo;
-* Encontrar o menor caminho entre dois IPs;
-* Calcular o diâmetro do grafo;
-* Identificar os 5 roteadores mais críticos.
-
-Cada IP é tratado como um nó do grafo, e cada ligação entre dois IPs representa uma aresta direcionada.
-
-Exemplo:
-
-```text
-hop_from -> hop_to
-```
-
-Isso quer dizer que se uma linha do arquivo indica que o salto foi de um IP para outro, o programa vai criar uma ligação direcionada entre esses dois nós.
+O programa lê dados de rotas, monta um grafo direcionado com os endereços IP e permite realizar análises como exibição do grafo, menor caminho, diâmetro e identificação de roteadores críticos.
 
 ---
 
 ## COMO USAR?
 
-LINUX:
+### LINUX:
 
 Para compilar e executar o projeto, é necessário ter:
 
@@ -60,62 +43,60 @@ Para verificar se a instalação do Graphviz funcionou:
 dot -V
 ```
 
-Se aparecerem as versões do `g++` e do Graphviz, o ambiente está pronto para compilar e executar o projeto.
+Se aparecer a versão do Graphviz, a instalação foi concluída corretamente.
 
----
+#### COMPILAÇÃO
 
-## COMPILAÇÃO
+O projeto utiliza o padrão C++17, pois o código usa recursos como `structured bindings`, por exemplo:
 
-Para compilar no terminal Linux:
+```cpp
+for (const auto& [key, n] : graph)
+```
+
+Para compilar:
 
 ```bash
 g++ -std=c++17 graphroute.cpp -o graphroute
 ```
 
-O `-std=c++17` é usado porque o código utiliza recursos do C++17, como `structured bindings`.
+Como o arquivo `graphroute.cpp` já inclui o arquivo `digraph.cpp`, a compilação deve ser feita apenas com o `graphroute.cpp`.
 
----
+#### EXECUÇÃO
 
-## EXECUÇÃO
-
-Após compilar, execute o programa informando o arquivo `.log` como argumento, exemplo:
+Para executar o programa, informe o arquivo `.log` como argumento:
 
 ```bash
 ./graphroute input_1.log
 ```
 
-Se nenhum arquivo for informado, o programa vai mostrar uma mensagem indicando o modo correto de uso:
+Exemplo com outro arquivo:
 
-```text
-Uso: ./graphroute <arquivo.log>
+```bash
+./graphroute input_3.log
 ```
 
-Se o arquivo informado não puder ser aberto, o programa também exibirá uma mensagem de erro e finalizará.
+Caso nenhum arquivo seja informado, o programa exibirá uma mensagem indicando o modo correto de uso.
 
 ---
 
 ## FORMATO DO ARQUIVO DE ENTRADA
 
-O arquivo de entrada possui linhas no formato CSV com dados de traceroute. A primeira linha é o cabeçalho:
+O arquivo de entrada possui linhas em formato CSV.
+
+O formato esperado é:
 
 ```text
 prb_id,probe_src,dst_addr,hop,hop_from,hop_to,rtt
 ```
 
-As colunas utilizadas pelo programa são:
+As colunas principais utilizadas pelo programa são:
 
 * `hop_from`: IP de origem do salto;
 * `hop_to`: IP de destino do salto.
 
-No código, essas colunas são acessadas pelos índices `fields[4]` e `fields[5]`, pois o `vector` começa no índice zero:
+No código, esses campos são acessados por posição no `vector`:
 
 ```cpp
-g.insert_link(fields[4], fields[5]);
-```
-
-Nesse caso:
-
-```text
 fields[4] = hop_from
 fields[5] = hop_to
 ```
@@ -126,25 +107,82 @@ Cada linha válida representa uma aresta direcionada no grafo:
 hop_from -> hop_to
 ```
 
-Valores vazios ou `"*"` são ignorados, pois não representam um IP válido para o grafo. Isso acontece porque um `"*"` no traceroute representa um `timeout`. Por isso, não existe um vértice válido para criar a ligação.
+Valores vazios ou `"*"` são ignorados, pois não representam um IP válido para a construção do grafo.
 
-Também é possível que a mesma ligação apareça mais de uma vez no arquivo. Nesses casos, o grafo não cria arestas duplicadas.
+---
+
+## LEITURA DAS LINHAS DO ARQUIVO
+
+Para separar os campos de cada linha do arquivo `.log`, foi usada a função `split`.
+
+```cpp
+vector<string> split(const string& line, char sep)
+{
+    vector<string> fields;
+    stringstream ss(line);
+    string campo;
+
+    while (getline(ss, campo, sep))
+        fields.push_back(campo);
+
+    return fields;
+}
+```
+
+A função `split` foi criada no próprio código. Ela usa `stringstream` para tratar uma `string` como se fosse uma entrada de dados.
+
+A chamada da função define que o separador será a vírgula:
+
+```cpp
+vector<string> fields = split(line, ',');
+```
+
+Assim, cada linha do CSV é dividida em campos separados, que depois são armazenados no `vector`.
+
+---
+
+## VALIDAÇÃO DAS ENTRADAS
+
+A validação dos IPs lidos do arquivo é feita no `graphroute.cpp`, pois é a `main` que lê o arquivo de entrada.
+
+A função utilizada foi:
+
+```cpp
+bool valid_ip(const string& ip)
+{
+    return !ip.empty() && ip != "*";
+}
+```
+
+Na leitura do arquivo, antes de inserir a ligação no grafo, o programa verifica se os campos são válidos:
+
+```cpp
+string from = fields[4];
+string to = fields[5];
+
+if (!valid_ip(from) || !valid_ip(to))
+    continue;
+
+g.insert_link(from, to);
+```
+
+Dessa forma, linhas com IP vazio ou com `"*"` são ignoradas antes de chegar na estrutura do grafo.
 
 ---
 
 ## MENU DO PROGRAMA
 
-Ao executar, o programa mostrará o menu:
+O programa apresenta um menu com as seguintes opções:
 
 ```text
 1. Exibir Grafo Completo
 2. Encontrar Menor Caminho
-3. Calcular o Diâmetro do Grafo
-4. Identificar Roteadores Críticos
+3. Calcular o Diametro do Grafo
+4. Identificar Roteadores Criticos
 0. Sair
 ```
 
-Nas opções 1 e 2, o programa permite escolher o formato de saída:
+As opções de visualização utilizam o Graphviz e permitem escolher o formato de saída:
 
 ```text
 1. Tela
@@ -152,76 +190,55 @@ Nas opções 1 e 2, o programa permite escolher o formato de saída:
 3. Documento (PDF)
 ```
 
-Essas saídas são geradas usando o Graphviz.
-
 ---
 
 ## ORGANIZAÇÃO DO CÓDIGO
 
-O projeto foi separado em dois arquivos principais:
+O projeto foi organizado em dois arquivos principais:
 
 * `digraph.cpp`: contém a estrutura do grafo e as funções de análise;
-* `graphroute.cpp`: contém a leitura do arquivo, o menu e as chamadas das funções.
+* `graphroute.cpp`: contém a leitura do arquivo, validação dos dados, menu e chamadas das funções do grafo.
 
-A ideia foi deixar a lógica do grafo separada da parte de interação com o usuário. O `digraph.cpp` não sabe nada sobre o formato do arquivo `.log` ou sobre o menu, ele só sabe manipular o grafo.
+A separação foi feita para manter a lógica do grafo concentrada em um arquivo e a interação com o usuário em outro.
 
 ---
 
 ## GRAFO DIRECIONADO
 
-O trabalho usa um grafo direcionado, pois uma ligação de um IP para outro não significa necessariamente que exista o caminho contrário.
-
-Exemplo:
+O projeto utiliza um grafo direcionado, pois cada linha válida do arquivo representa uma ligação com direção:
 
 ```text
-A -> B
+hop_from -> hop_to
 ```
 
-Isso indica que existe uma ligação de `A` para `B`, mas não necessariamente de `B` para `A`.
+Isso significa que uma ligação de `A` para `B` não significa automaticamente que exista uma ligação de `B` para `A`.
 
-Isso reflete a realidade de uma rota: o pacote passou de `A` para `B` em um salto, mas o caminho de volta pode passar por roteadores diferentes.
+Esse comportamento é importante porque as rotas de rede possuem uma sequência de saltos, e a direção dos saltos precisa ser respeitada.
 
-Cada IP é armazenado como um nó do grafo. A estrutura usada foi:
+---
+## ESTRUTURA DO NÓ
+
+Cada IP é representado como um nó do grafo.
+
+A estrutura utilizada foi:
 
 ```cpp
 struct node {
     std::string ip;
-    std::vector<node*> links;
-    std::unordered_set<std::string> links_inserted;
+    std::unordered_set<node*> links;
+    int input_degree = 0;
 };
 ```
 
-* `ip`: guarda o endereço IP do nó;
-* `links`: guarda os vizinhos daquele nó, ou seja, os IPs para onde ele aponta;
-* `links_inserted`: usado para evitar arestas duplicadas.
+O atributo `ip` guarda o endereço IP do nó.
+
+O atributo `links` guarda os vizinhos do nó, ou seja, os nós para os quais ele aponta.
+
+O atributo `input_degree` guarda o grau de entrada do nó, ou seja, quantas arestas chegam nele.
 
 ---
 
-## POR QUE USAR VECTOR E UNORDERED_SET?
-
-O `vector<node*> links` foi usado para guardar os vizinhos mantendo a ordem de inserção.
-
-Isso é importante no menor caminho, porque se existir mais de um caminho com a mesma quantidade de saltos, o programa deve usar o primeiro caminho encontrado, e essa ordem depende da ordem em que as arestas foram lidas do arquivo.
-
-Já o `unordered_set<std::string> links_inserted` foi usado para evitar que a mesma aresta seja inserida mais de uma vez.
-
-Exemplo:
-
-```text
-A -> B
-A -> B
-```
-
-Mesmo que essa ligação apareça mais de uma vez no arquivo, ela só será inserida uma vez no grafo.
-
-```text
-vector         -> mantém a ordem dos vizinhos
-unordered_set  -> evita ligações duplicadas
-```
-
----
-
-## UNORDERED_MAP
+## ARMAZENAMENTO DO GRAFO
 
 O grafo é armazenado em um `unordered_map`:
 
@@ -229,23 +246,43 @@ O grafo é armazenado em um `unordered_map`:
 std::unordered_map<std::string, node> graph;
 ```
 
-A chave é o IP, e o valor é o nó correspondente.
+A chave é o endereço IP em formato de texto, e o valor é o nó correspondente.
 
 Exemplo:
 
 ```text
-graph["192.168.0.1"] = nó desse IP
+"192.168.0.1" -> node
+"10.0.0.1"    -> node
 ```
 
-Isso facilita a busca por um nó do grafo usando o endereço IP.
+Essa estrutura foi usada porque permite encontrar rapidamente um nó a partir do seu IP.
 
-Também é usado outro `unordered_map` para armazenar o grau de entrada dos nós:
+---
+
+## POR QUE USAR UNORDERED_SET NOS LINKS?
+
+Os vizinhos de cada nó são armazenados com:
 
 ```cpp
-std::unordered_map<std::string, int> input_degree;
+std::unordered_set<node*> links;
 ```
 
-Ele guarda quantas arestas chegam em cada IP e é usado depois para identificar os roteadores críticos.
+O `unordered_set` foi utilizado porque ele não permite elementos repetidos. Assim, se a mesma aresta aparecer mais de uma vez no arquivo, ela será inserida apenas uma vez no grafo.
+
+Exemplo:
+
+```text
+A -> B
+A -> B
+```
+
+Mesmo que essa ligação apareça duas vezes no arquivo, o nó `B` será armazenado apenas uma vez nos vizinhos de `A`.
+
+Essa estrutura também é usada nas buscas e na visualização do grafo, pois permite percorrer os vizinhos de cada nó.
+
+### OBSERVAÇÃO SOBRE A ORDEM DOS VIZINHOS
+
+O `unordered_set` não mantém a ordem de inserção dos vizinhos. Em uma versão anterior, em que os vizinhos eram guardados em um `vector`, a ordem em que as arestas eram lidas do arquivo era preservada, o que tornava o resultado do menor caminho determinístico quando havia mais de um caminho com a mesma quantidade de saltos (sempre vencia o primeiro lido). Com o `unordered_set`, a ordem de iteração depende do hash dos ponteiros, então, entre dois ou mais caminhos de mesmo comprimento, qual deles é retornado pode variar. O caminho continua sendo sempre um dos menores, pois a BFS garante o número mínimo de saltos; o que se perde é apenas a garantia de qual dos caminhos empatados aparece.
 
 ---
 
@@ -253,108 +290,143 @@ Ele guarda quantas arestas chegam em cada IP e é usado depois para identificar 
 
 A função `insert_node` adiciona um IP como vértice do grafo.
 
-Primeiro verifica se o IP é inválido, como vazio ou `"*"`. Também evita inserir o mesmo IP mais de uma vez. Se o nó já existe, a função simplesmente retorna sem fazer nada.
-
-Quando um novo nó é criado, seu grau de entrada começa em zero:
-
 ```cpp
-input_degree[ip] = 0;
+void insert_node(const std::string& ip)
+{
+    if (graph.count(ip) != 0) {
+        return;
+    }
+
+    node aux;
+    aux.ip = ip;
+    aux.input_degree = 0;
+
+    graph[ip] = aux;
+}
 ```
+
+Ela verifica se o IP já existe no grafo. Se já existir, não insere novamente.
+
+Como a validação de IP vazio ou `"*"` foi colocada na `main`, essa função fica responsável apenas por inserir o nó na estrutura do grafo.
 
 ---
 
 ## INSERÇÃO DE ARESTAS
 
-A função `insert_link` cria uma ligação direcionada entre dois IPs:
+A função `insert_link` cria uma aresta direcionada entre dois IPs:
 
 ```text
 from -> to
 ```
 
-Antes de criar a ligação, ela garante que os dois IPs existam no grafo:
+A função recebe os IPs de origem e destino, garante que os dois nós existam e depois cria a ligação entre eles.
 
 ```cpp
-insert_node(from);
-insert_node(to);
+void insert_link(const std::string& from, const std::string& to)
+{
+    insert_node(from);
+    insert_node(to);
+
+    node* pfrom = find(from);
+    node* pto = find(to);
+
+    if (!pfrom || !pto)
+        return;
+
+    if (pfrom->links.count(pto) != 0)
+        return;
+
+    pfrom->links.insert(pto);
+
+    pto->input_degree++;
+    total_edges++;
+}
 ```
 
-Depois, adiciona o destino na lista de vizinhos da origem:
+A linha abaixo insere o ponteiro do nó de destino dentro do conjunto de vizinhos do nó de origem:
 
 ```cpp
-pfrom->links.push_back(pto);
+pfrom->links.insert(pto);
 ```
 
-E registra essa ligação no `links_inserted`, para que não seja inserida de novo:
+Depois disso, o grau de entrada do nó de destino é atualizado:
 
 ```cpp
-pfrom->links_inserted.insert(to);
+pto->input_degree++;
 ```
 
-Também atualiza o grau de entrada do IP de destino:
-
-```cpp
-input_degree[to]++;
-```
-
-E incrementa o total de arestas do grafo:
+E o total de arestas também é incrementado:
 
 ```cpp
 total_edges++;
 ```
 
-No final, o programa exibe o total de vértices e arestas inseridas:
+---
+## GRAU DE ENTRADA
 
-```text
-Vertices unicos (IPs): 110 | Arestas: 118
+O grau de entrada representa quantas arestas chegam em um determinado nó.
+
+Neste projeto, o grau de entrada fica dentro do próprio nó:
+
+```cpp
+int input_degree = 0;
 ```
+
+Antes, essa informação poderia ficar em um `unordered_map` separado, mas foi escolhido deixar o valor dentro do próprio `node`, pois o grau de entrada pertence ao nó.
+
+Assim, quando uma aresta chega em um nó, o programa faz:
+
+```cpp
+pto->input_degree++;
+```
+
+Isso significa que o nó de destino recebeu mais uma ligação de entrada.
 
 ---
 
-## VALIDAÇÃO DE IPS
+## FUNÇÃO RETURN_INPUT_DEGREE
 
-Antes de calcular o menor caminho, o programa verifica se os IPs de origem e destino informados pelo usuário realmente existem no grafo:
+A função `return_input_degree` retorna o grau de entrada de um IP.
 
 ```cpp
-if (!g.contains(origem) || !g.contains(destino)) {
-    cout << "IP de origem ou destino nao existe no grafo.\n";
+int return_input_degree(const std::string& ip)
+{
+    node* p = find(ip);
+
+    if (!p)
+        return 0;
+
+    return p->input_degree;
 }
 ```
 
-Essa validação evita tentar calcular um caminho usando IPs que não foram encontrados no arquivo de entrada.
+Ela é usada no `graphroute.cpp` para exibir o grau de entrada dos roteadores críticos.
+
+A `main` recebe apenas os IPs no ranking, então essa função permite buscar o grau de entrada daquele IP sem acessar diretamente a estrutura interna do grafo.
 
 ---
 
-## MENOR CAMINHO (BFS)
+## MENOR CAMINHO
 
-Para encontrar o menor caminho entre dois IPs, foi usada a busca em largura, conhecida como BFS.
+Para encontrar o menor caminho entre dois IPs, foi utilizada a busca em largura, conhecida como BFS.
 
-Todas as ligações representam "um salto". Nesse caso, o menor caminho é aquele com a menor quantidade de saltos, e a BFS é o algoritmo correto para isso.
+A BFS foi escolhida porque o grafo não possui pesos nas arestas. Nesse caso, o menor caminho é aquele com a menor quantidade de saltos.
 
-A BFS percorre o grafo por níveis. Exemplo:
+A função utiliza:
 
-```text
-A -> B
-A -> C
-B -> D
+* `queue`: para controlar a ordem de visita dos nós;
+* `unordered_set`: para marcar os nós já visitados;
+* `unordered_map`: para guardar de onde cada nó foi alcançado.
+
+Durante a busca, o programa percorre os vizinhos do nó atual:
+
+```cpp
+for (node* adj : current->links)
 ```
 
-Começando em `A`, a BFS visita primeiro:
+O mapa `origin` é usado para reconstruir o caminho depois que o destino é encontrado.
 
-```text
-nível 0: A
-nível 1: B, C
-nível 2: D
-```
-
-Ou seja, primeiro os vizinhos diretos, depois os vizinhos dos vizinhos, e assim por diante. Por isso ela garante o menor número de saltos.
-
-A função `shortest_path` é composta por:
-
-* `queue<node*>`: controla a ordem de visita dos nós;
-* `unordered_set<node*>`: marca os nós já visitados (`queued`);
-* `unordered_map<node*, node*>`: guarda de onde cada nó foi alcançado (`origin`).
-
-O mapa `origin` guarda o caminho percorrido. Exemplo:
+Exemplo:
 
 ```text
 origin[B] = A
@@ -363,15 +435,7 @@ origin[D] = B
 
 Isso significa que o caminho até `D` veio por `B`, e o caminho até `B` veio por `A`.
 
-Quando o nó de destino é encontrado, o caminho é reconstruído de trás para frente, seguindo o mapa `origin` até chegar na origem, que tem `origin[origem] = nullptr`.
-
-Depois disso, o caminho é invertido com `std::reverse` para ficar na ordem correta.
-
-Se não houver caminho entre os dois IPs, `path` fica vazio, e o programa informa:
-
-```text
-Nenhum caminho encontrado entre <origem> e <destino>.
-```
+Depois, o caminho é reconstruído do destino até a origem e invertido para ficar na ordem correta.
 
 ---
 
@@ -379,28 +443,29 @@ Nenhum caminho encontrado entre <origem> e <destino>.
 
 O diâmetro do grafo é o maior menor caminho encontrado entre dois nós alcançáveis.
 
-Para calcular isso, o programa executa uma BFS a partir de cada nó do grafo:
+Para calcular o diâmetro, o programa executa uma BFS a partir de cada nó do grafo:
 
 ```cpp
 for (auto& [key, start_node] : graph) {
     node* start = &start_node;
-    // BFS a partir de start
-}
 ```
 
-Em cada BFS, o mapa `dist` guarda a distância mínima do nó inicial até os outros nós alcançáveis.
-
-Exemplo:
+Como o grafo está em um `unordered_map`, cada item possui uma chave e um valor:
 
 ```text
-dist[A] = 0
-dist[B] = 1
-dist[C] = 2
+key        = IP
+start_node = nó
 ```
 
-Sempre que uma distância maior é encontrada, o programa atualiza o `max_dist`.
+No cálculo do diâmetro, a BFS precisa do nó, pois é dentro dele que estão os vizinhos usados na busca. Por isso é usado:
 
-Ao final de todas as BFS, `max_dist` representa o diâmetro do grafo em saltos. Como o grafo é direcionado, o cálculo respeita a direção das arestas.
+```cpp
+node* start = &start_node;
+```
+
+Cada BFS calcula as distâncias mínimas daquele nó até os demais nós alcançáveis. Durante esse processo, o programa guarda a maior distância encontrada.
+
+Como o grafo é direcionado, o cálculo respeita a direção das arestas.
 
 ---
 
@@ -408,79 +473,82 @@ Ao final de todas as BFS, `max_dist` representa o diâmetro do grafo em saltos. 
 
 Os roteadores críticos são identificados pelo grau de entrada de cada nó.
 
-O grau de entrada representa quantas arestas chegam em determinado IP. Quanto maior o grau de entrada, mais vezes aquele IP aparece como destino de uma ligação.
+Quanto maior o grau de entrada, mais ligações chegam naquele IP. Isso pode indicar que o roteador tem maior importância dentro da rede analisada.
 
-A função `critical_routers` monta uma lista com todos os IPs e ordena pelo grau de entrada, em ordem decrescente:
+A função `critical_routers` monta um ranking com os IPs do grafo:
+
+```cpp
+for (const auto& item : graph) {
+    ranking.push_back(item.first);
+}
+```
+
+Depois, o ranking é ordenado pelo maior grau de entrada:
 
 ```cpp
 std::sort(ranking.begin(), ranking.end(),
     [this](const std::string& a, const std::string& b) {
-        if (input_degree[a] != input_degree[b])
-            return input_degree[a] > input_degree[b];
+        node* pa = find(a);
+        node* pb = find(b);
+
+        if (pa->input_degree != pb->input_degree)
+            return pa->input_degree > pb->input_degree;
 
         return a < b;
     });
 ```
 
-O `[this]` permite que ela acesse o atributo `input_degree` da própria classe `digraph` durante a comparação.
+Em caso de empate, o IP em ordem crescente é usado como critério de desempate, apenas para manter a saída organizada.
 
-Em caso de empate no grau de entrada, o IP é usado em ordem crescente apenas para manter a saída organizada e sempre igual entre execuções.
+No `graphroute.cpp`, são exibidos no máximo cinco roteadores:
 
-Depois de ordenado, o programa exibe os cinco primeiros, exemplo:
-
-```text
-Top 5 roteadores criticos:
-1. 20.157.222.42 - Grau de entrada: 7
-2. 176.52.248.125 - Grau de entrada: 3
-3. 213.140.50.187 - Grau de entrada: 3
-4. 213.140.36.233 - Grau de entrada: 2
-5. 213.140.36.3 - Grau de entrada: 2
+```cpp
+int limit = std::min(5, (int)ranking.size());
 ```
 
-O grau de cada IP é obtido com `return_input_degree`, que consulta o `unordered_map input_degree`.
+Assim, se o grafo tiver menos de cinco IPs, o programa mostra apenas a quantidade disponível.
 
 ---
 
 ## GRAPHVIZ E SAÍDAS VISUAIS
 
-O Graphviz é usado para gerar a visualização do grafo.
+As opções que geram visualização utilizam o Graphviz.
 
-O programa cria um arquivo `.dot` com as ligações do grafo. Exemplo:
+O programa cria dinamicamente arquivos `.dot`, que depois são usados para gerar a visualização em tela, PNG ou PDF.
 
-```dot
-digraph {
-    "A" -> "B";
-    "B" -> "C";
-}
+Exemplo de comando gerado internamente pelo programa:
+
+```bash
+dot -Tpng arquivo.dot -o arquivo.png
 ```
 
-Depois, esse arquivo é enviado para o Graphviz através do `system()`, que pode gerar:
-
-* Visualização na tela (`dot -Tx11`);
-* Imagem PNG (`dot -Tpng`);
-* Documento PDF (`dot -Tpdf`).
-
-### Destaque do menor caminho
-
-Na opção de menor caminho, a função `show_path` gera um `.dot` separado (`<arquivo>_path.dot`) onde os nós e arestas do caminho encontrado são destacados:
-
-* Os nós do caminho são preenchidos em vermelho com texto branco:
-
-```dot
-"82.66.191.65" [style=filled, fillcolor=red, fontcolor=white];
-```
-
-* As arestas do caminho ficam vermelhas e mais grossas:
-
-```dot
-"82.66.191.65" -> "192.168.3.1" [color=red, penwidth=3];
-```
-
-O restante do grafo é desenhado normalmente, sem nenhum atributo extra. Assim, é possível visualizar o grafo completo com o caminho encontrado em destaque.
+Na visualização do menor caminho, os nós e arestas pertencentes ao caminho encontrado são destacados em vermelho para facilitar a análise.
 
 ---
 
-## EXEMPLO DE USO
+## ARQUIVOS GERADOS
+
+Ao exibir o grafo completo, podem ser gerados arquivos como:
+
+```text
+input_1.log.dot
+input_1.log.png
+input_1.log.pdf
+```
+
+Ao exibir o menor caminho, podem ser gerados arquivos como:
+
+```text
+input_1.log.dot
+input_1.log.png
+input_1.log.pdf
+```
+
+Esses arquivos são criados a partir do nome do arquivo de entrada informado na execução.
+
+---
+
+## EXEMPLO DE USO 
 
 Compilar:
 
@@ -521,3 +589,12 @@ Top 5 roteadores criticos:
 4. 213.140.36.233 - Grau de entrada: 2
 5. 213.140.36.3 - Grau de entrada: 2
 ```
+---
+
+## OBSERVAÇÕES
+
+O projeto busca manter o código próximo ao que foi trabalhado em aula, usando estruturas como `unordered_map`, `unordered_set`, `queue` e BFS.
+
+A implementação representa os IPs como nós de um grafo direcionado, permite analisar caminhos, calcular o diâmetro e identificar roteadores importantes com base no grau de entrada.
+
+As validações dos dados lidos do arquivo foram colocadas na `main`, enquanto o `digraph.cpp` ficou responsável pela estrutura e pelas operações do grafo.
