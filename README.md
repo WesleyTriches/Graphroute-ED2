@@ -280,10 +280,6 @@ Mesmo que essa ligação apareça duas vezes no arquivo, o nó `B` será armazen
 
 Essa estrutura também é usada nas buscas e na visualização do grafo, pois permite percorrer os vizinhos de cada nó.
 
-### OBSERVAÇÃO SOBRE A ORDEM DOS VIZINHOS
-
-O `unordered_set` não mantém a ordem de inserção dos vizinhos. Em uma versão anterior, em que os vizinhos eram guardados em um `vector`, a ordem em que as arestas eram lidas do arquivo era preservada, o que tornava o resultado do menor caminho determinístico quando havia mais de um caminho com a mesma quantidade de saltos (sempre vencia o primeiro lido). Com o `unordered_set`, a ordem de iteração depende do hash dos ponteiros, então, entre dois ou mais caminhos de mesmo comprimento, qual deles é retornado pode variar. O caminho continua sendo sempre um dos menores, pois a BFS garante o número mínimo de saltos; o que se perde é apenas a garantia de qual dos caminhos empatados aparece.
-
 ---
 
 ## INSERÇÃO DE NÓS
@@ -371,8 +367,6 @@ Neste projeto, o grau de entrada fica dentro do próprio nó:
 ```cpp
 int input_degree = 0;
 ```
-
-Antes, essa informação poderia ficar em um `unordered_map` separado, mas foi escolhido deixar o valor dentro do próprio `node`, pois o grau de entrada pertence ao nó.
 
 Assim, quando uma aresta chega em um nó, o programa faz:
 
@@ -591,10 +585,14 @@ Top 5 roteadores criticos:
 ```
 ---
 
-## OBSERVAÇÕES
+## JUSTIFICATIVAS DAS ESCOLHAS
 
-O projeto busca manter o código próximo ao que foi trabalhado em aula, usando estruturas como `unordered_map`, `unordered_set`, `queue` e BFS.
+O `unordered_map` foi usado para armazenar os nós do grafo e permitir a busca rápida por IP.
 
-A implementação representa os IPs como nós de um grafo direcionado, permite analisar caminhos, calcular o diâmetro e identificar roteadores importantes com base no grau de entrada.
+O `unordered_set` foi usado nos vizinhos para evitar arestas duplicadas.
+
+A `queue` foi usada na BFS, pois ela permite percorrer o grafo por níveis, sendo adequada para encontrar menor caminho em grafos sem peso.
+
+O grau de entrada foi armazenado no próprio nó para facilitar a identificação dos roteadores críticos.
 
 As validações dos dados lidos do arquivo foram colocadas na `main`, enquanto o `digraph.cpp` ficou responsável pela estrutura e pelas operações do grafo.
